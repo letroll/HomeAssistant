@@ -4,47 +4,48 @@ blueprint:
   description: Automate your Lidl/LivarnoLux 4Button Remote Switch using ZHA events. (TYZB01_hww2py6b)
   domain: automation
   input:
-    Lidl_4Button_Remote_switch:
-      name: Lidl 4Button Remote Switch
-      description: Select the Lidl 4Button Remote Switch to use
+    Lidl_4Button_Remote:
+      name: Lidl 4Button Remote
+      description: Select the Lidl 4 Button Remote to use
       selector:
         device:
           integration: zha
-          manufacturer: _TYZB01_hww2py6b
+          manufacturer: _TYZB01_bngwdjsr
+          model: TS1001
           multiple: false
     button_one_short_press:
       name: Single Press
-      description: Action to run OFF button 0 single press
+      description: Action to run on button 1 (OFF/0) single press
       default: []
       selector:
         action: {}
     button_two_short_press:
       name: Single Press
-      description: Action to run On button 1 single press
+      description: Action to run on button 2 (ON/1) single press
       default: []
       selector:
         action: {}
     button_three_short_press:
       name: Single Press
-      description: Action to run on button Up single press
+      description: Action to run on button 3 (Bright) single press
       default: []
       selector:
         action: {}
     button_three_long_press:
-      name: Long Press
-      description: Action to run on button Up long press
+      name: B3 Long Press
+      description: Action to run on button 3 (Bright) longpress
       default: []
       selector:
         action: {}
     button_four_short_press:
       name: Single Press
-      description: Action to run on button Down single press
+      description: Action to run on button 4 (Dim) single press
       default: []
       selector:
         action: {}
     button_four_long_press:
-      name: Long Press
-      description: Action to run on button Down long press
+      name: B4 Long Press
+      description: Action to run on button 4 (Dim) longpress
       default: []
       selector:
         action: {}
@@ -54,21 +55,23 @@ trigger:
   - platform: event
     event_type: zha_event
     event_data:
-      device_id: !input "Lidl_4Button_Remote_switch"
+      device_id: !input "Lidl_4Button_Remote"
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
-      button_mode: "{{ trigger.event.data.args[0] }}"
+      args: "{{ trigger.event.data.args }}"
+      stepmode: "{{trigger.event.data.params.step_mode}}"
+      movemode: "{{trigger.event.data.params.move_mode}}"
   - choose:
       - conditions: "{{ command == 'off' }}"
         sequence: !input "button_one_short_press"
       - conditions: "{{ command == 'on' }}"
         sequence: !input "button_two_short_press"
-      - conditions: "{{ button_mode == 'StepMode.Up' }}"
+      - conditions: "{{  command == 'step' and stepmode == 'StepMode.Up' }}"
         sequence: !input "button_three_short_press"
-      - conditions: "{{ button_mode == 'StepMode.Down' }}"
+      - conditions: "{{  command == 'step' and stepmode == 'StepMode.Down' }}"
         sequence: !input "button_four_short_press"
-      - conditions: "{{ button_mode == 'MoveMode.Up' }}"
+      - conditions: "{{  command == 'move' and movemode == 'MoveMode.Up' }}"
         sequence: !input "button_three_long_press"
-      - conditions: "{{ button_mode == 'MoveMode.Down' }}"
+      - conditions: "{{  command == 'move' and movemode == 'MoveMode.Down' }}"
         sequence: !input "button_four_long_press"
